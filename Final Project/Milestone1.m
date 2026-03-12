@@ -1,4 +1,4 @@
-% Test Script for TrajectoryGenerator (Milestone 1)
+%% Test Script for TrajectoryGenerator (Milestone 1)
 % Mobile Manipulation Capstone – Scene 8 End-Effector Animation
 %
 % This script tests the TrajectoryGenerator function by generating a

@@ -1,0 +1,201 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Milestone2</title><meta name="generator" content="MATLAB 9.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2026-03-09"><meta name="DC.source" content="Milestone2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% Test Script for NextState (Milestone 2)</span>
+<span class="comment">% Mobile Manipulation Capstone &#8211; Scene 6 youBot Kinematics Simulation</span>
+<span class="comment">%</span>
+<span class="comment">% This script tests the NextState function by simulating the motion of the</span>
+<span class="comment">% youBot using constant joint and wheel velocities for one second. The</span>
+<span class="comment">% resulting robot configurations are written to a CSV file for visualization</span>
+<span class="comment">% in CoppeliaSim Scene 6.</span>
+<span class="comment">%</span>
+<span class="comment">% Written by Brandon Lopez</span>
+<span class="comment">% UCSD Mechatronics &amp; Controls Master's Program</span>
+<span class="comment">% brandon.lopez.miramontes@gmail.com</span>
+
+close <span class="string">all</span>;
+clear;
+clc;
+
+<span class="comment">% Initial robot configuration</span>
+<span class="comment">% [phi; x; y; arm1; arm2; arm3; arm4; arm5; wheel1; wheel2; wheel3; wheel4]</span>
+currentState = zeros(12,1);
+
+<span class="comment">% Constant controls applied during the simulation</span>
+<span class="comment">% [5 arm joint speeds; 4 wheel speeds]</span>
+jointVel = [0; 0; 0; 0; 0; 10; 10; 10; 10];
+
+<span class="comment">% Simulation parameters</span>
+dt = 0.01;            <span class="comment">% timestep (seconds)</span>
+maxJointVel = 15;     <span class="comment">% maximum allowable joint/wheel velocity</span>
+N = 100;              <span class="comment">% number of simulation steps (1 second)</span>
+
+<span class="comment">% Preallocate trajectory matrix</span>
+traj = zeros(N,13);
+
+<span class="comment">% Run the simulation loop</span>
+<span class="keyword">for</span> i = 1:N
+
+    <span class="comment">% Compute next robot state</span>
+    currentState = NextState(currentState, jointVel, dt, maxJointVel);
+
+    <span class="comment">% Store the state (12 variables) + gripper state (0 = open)</span>
+    traj(i,:) = [currentState' 0];
+
+<span class="keyword">end</span>
+
+<span class="comment">% Check size of output trajectory</span>
+disp(<span class="string">'Size of trajectory output:'</span>);
+disp(size(traj));
+
+<span class="comment">% Write CSV file for Scene 6 visualization</span>
+writematrix(traj, <span class="string">'Milestone2_scene6_test.csv'</span>);
+
+<span class="comment">% Display final robot configuration</span>
+disp(<span class="string">'Final robot state:'</span>);
+disp(currentState);
+
+disp(<span class="string">'CSV file "Milestone2_scene6_test.csv" created successfully.'</span>);
+</pre><pre class="codeoutput">Size of trajectory output:
+   100    13
+
+Final robot state:
+         0
+    0.4750
+         0
+         0
+         0
+         0
+         0
+         0
+   10.0000
+   10.0000
+   10.0000
+   10.0000
+
+CSV file "Milestone2_scene6_test.csv" created successfully.
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% Test Script for NextState (Milestone 2)
+% Mobile Manipulation Capstone – Scene 6 youBot Kinematics Simulation
+%
+% This script tests the NextState function by simulating the motion of the
+% youBot using constant joint and wheel velocities for one second. The
+% resulting robot configurations are written to a CSV file for visualization
+% in CoppeliaSim Scene 6.
+%
+% Written by Brandon Lopez
+% UCSD Mechatronics & Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
+
+close all;
+clear;
+clc;
+
+% Initial robot configuration
+% [phi; x; y; arm1; arm2; arm3; arm4; arm5; wheel1; wheel2; wheel3; wheel4]
+currentState = zeros(12,1);
+
+% Constant controls applied during the simulation
+% [5 arm joint speeds; 4 wheel speeds]
+jointVel = [0; 0; 0; 0; 0; 10; 10; 10; 10];
+
+% Simulation parameters
+dt = 0.01;            % timestep (seconds)
+maxJointVel = 15;     % maximum allowable joint/wheel velocity
+N = 100;              % number of simulation steps (1 second)
+
+% Preallocate trajectory matrix
+traj = zeros(N,13);
+
+% Run the simulation loop
+for i = 1:N
+
+    % Compute next robot state
+    currentState = NextState(currentState, jointVel, dt, maxJointVel);
+
+    % Store the state (12 variables) + gripper state (0 = open)
+    traj(i,:) = [currentState' 0];
+
+end
+
+% Check size of output trajectory
+disp('Size of trajectory output:');
+disp(size(traj));
+
+% Write CSV file for Scene 6 visualization
+writematrix(traj, 'Milestone2_scene6_test.csv');
+
+% Display final robot configuration
+disp('Final robot state:');
+disp(currentState);
+
+disp('CSV file "Milestone2_scene6_test.csv" created successfully.');
+##### SOURCE END #####
+--></body></html>

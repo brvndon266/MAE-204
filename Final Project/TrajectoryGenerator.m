@@ -1,6 +1,9 @@
 function trajOutput = TrajectoryGenerator(T_se_init,  T_sc_init, T_sc_final, T_ce_grasp, T_ce_standoff )
 % TrajectoryGenerator
-% Written by Brandon Lopez, UCSD Mecatronics & Controls Masters <brandon.lopez.miramontes@gmail.com>
+
+% % Written by Brandon Lopez
+% UCSD Mechatronics & Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
 
 % This function generates a reference trajectory for the end-effector of a
 % robot performing a pick-and-place task. The trajectory moves the gripper
@@ -31,7 +34,7 @@ dt = 0.01;
 method = 5; % quintic (fifth-order polynomial) time scaling.
 
 % Step 1. Move the gripper from its initial configuration to a "standoff" % configuration a few cm above the block.
-N1 = 200;
+N1 = 300;
 Tf = N1*dt;
 Xstart = T_se_init;
 Xend = T_sc_init*T_ce_standoff;
@@ -47,7 +50,7 @@ for i = 1:N1
 end
 
 % Step 2. Move the gripper down to the grasp position.
-N2 = 100;
+N2 = 350;
 Tf = N2*dt;
 Xstart = traj{end};
 Xend = T_sc_init*T_ce_grasp;
@@ -69,7 +72,7 @@ trajVec(end) = 1;
 trajOutput = [trajOutput; trajVec];
 
 % Step 4. Move the gripper back to the "standoff" configuration
-N4 = 100;
+N4 = 350;
 Tf = N4*dt;
 Xstart = traj{end};
 Xend = T_sc_init*T_ce_standoff;
@@ -85,7 +88,7 @@ for i = 1:N4
 end
 
 % Step 5. Move the gripper to a "standoff" configuration above the final configuration.
-N5 = 200;
+N5 = 500;
 Tf = N5*dt;
 Xstart = traj{end};
 Xend = T_sc_final*T_ce_standoff;
@@ -101,7 +104,7 @@ for i = 1:N5
 end
 
 % Step 6. Move the gripper to the final configuration of the object.
-N6 = 100;
+N6 = 500;
 Tf = N6*dt;
 Xstart = traj{end};
 Xend = T_sc_final*T_ce_grasp;
@@ -123,7 +126,7 @@ trajVec(end) = 0;
 trajOutput = [trajOutput; trajVec];
 
 % Step 8. Move the gripper back to the "standoff" configuration
-N8 = 100;
+N8 = 500;
 Tf = N8*dt;
 Xstart = traj{end};
 Xend = T_sc_final*T_ce_standoff;
