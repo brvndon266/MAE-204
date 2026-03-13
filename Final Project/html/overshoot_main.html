@@ -1,0 +1,622 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Full Program / Wrapper Script</title><meta name="generator" content="MATLAB 9.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2026-03-12"><meta name="DC.source" content="overshoot_main.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Full Program / Wrapper Script</h1><p>Test Script for Full Program / Wrapper Script (Component 4) Mobile Manipulation Capstone &#8211; Full Pick-and-Place Simulation</p><p>This script combines the TrajectoryGenerator, FeedbackControl, and NextState functions to simulate the full mobile manipulation task. The program generates a reference trajectory, computes the control inputs required to follow the trajectory, updates the robot state over time, stores the resulting robot configurations, and plots both the end-effector error and manipulability factors.</p><p>Written by Brandon Lopez UCSD Mechatronics &amp; Controls Master's Program <a href="mailto:brandon.lopez.miramontes@gmail.com">brandon.lopez.miramontes@gmail.com</a></p><pre class="codeinput">close <span class="string">all</span>;
+clear;
+clc;
+
+<span class="comment">% Controller gains and timestep</span>
+Kp = 15 * eye(6); <span class="comment">%10</span>
+Ki = 2* eye(6);  <span class="comment">%2</span>
+lambda = 0.01;
+dt = 0.01;
+maxJointVel = 20;
+
+<span class="comment">% Cube configurations</span>
+x_init = 1.0;
+y_init = 0.0;
+z_init = 0.025;
+phi_init = 0;
+
+x_final = 0;
+y_final = -1.0;
+z_final = 0.025;
+phi_final = -pi/2;
+
+T_sc_init = [cos(phi_init) -sin(phi_init) 0 x_init;
+             sin(phi_init)  cos(phi_init) 0 y_init;
+             0              0             1 z_init;
+             0              0             0 1];
+
+T_sc_final = [cos(phi_final) -sin(phi_final) 0 x_final;
+              sin(phi_final)  cos(phi_final) 0 y_final;
+              0               0              1 z_final;
+              0               0              0  1];
+
+<span class="comment">% Grasp and standoff configurations</span>
+T_ce_grasp = [-sqrt(2)/2  0  sqrt(2)/2   0;
+               0          1  0           0;
+              -sqrt(2)/2  0 -sqrt(2)/2   0;
+               0          0  0           1];
+
+T_ce_standoff = [-sqrt(2)/2  0  sqrt(2)/2   0;
+                  0          1  0           0;
+                 -sqrt(2)/2  0 -sqrt(2)/2   0.10;
+                  0          0  0           1];
+
+<span class="comment">% youBot constants</span>
+l = 0.47 / 2;
+w = 0.3 / 2;
+r = 0.0475;
+
+T_b0 = [1 0 0 0.1662;
+        0 1 0 0;
+        0 0 1 0.0026;
+        0 0 0 1];
+
+M_0e = [1 0 0 0.033;
+        0 1 0 0;
+        0 0 1 0.6546;
+        0 0 0 1];
+
+Blist = [0  0  1  0       0.033   0;
+         0 -1  0 -0.5076  0       0;
+         0 -1  0 -0.3526  0       0;
+         0 -1  0 -0.2176  0       0;
+         0  0  1  0       0       0]';
+
+F = (r/4) * [ -1/(l+w),   1/(l+w),   1/(l+w),  -1/(l+w);
+               1,          1,          1,         1;
+              -1,          1,         -1,         1 ];
+
+F6 = [0 0 0 0;
+      0 0 0 0;
+      F(1,:);
+      F(2,:);
+      F(3,:);
+      0 0 0 0];
+
+<span class="comment">% Initial actual robot state</span>
+<span class="comment">% [phi; x; y; arm1; arm2; arm3; arm4; arm5; wheel1; wheel2; wheel3; wheel4]</span>
+currentState = zeros(12,1);
+<span class="comment">% Or, if you want the offset test case, use:</span>
+<span class="comment">%currentState = [0; 0; 0; 0; 0; 0.2; -1.6; 0; 0; 0; 0; 0];</span>
+
+<span class="comment">% Compute actual initial end-effector configuration from currentState</span>
+phi = currentState(1);
+x = currentState(2);
+y = currentState(3);
+theta = currentState(4:8);
+
+T_sb = [cos(phi) -sin(phi) 0 x;
+        sin(phi)  cos(phi) 0 y;
+        0         0        1 0.0963;
+        0         0        0 1];
+
+T_0e = FKinBody(M_0e, Blist, theta);
+T_se_init = T_sb * T_b0 * T_0e;
+
+<span class="comment">% Generate reference trajectory from actual initial pose</span>
+trajOutput = TrajectoryGenerator(T_se_init, T_sc_init, T_sc_final, <span class="keyword">...</span>
+                                 T_ce_grasp, T_ce_standoff);
+
+writematrix(trajOutput, <span class="string">'overtrajectoryOutput.csv'</span>);
+
+<span class="comment">% Storage</span>
+Ntraj = size(trajOutput, 1);
+allStates = zeros(Ntraj, 13);
+allErrors = zeros(Ntraj - 1, 6);
+
+<span class="comment">% Storage for manipulability factors</span>
+mu_w = zeros(Ntraj-1,1);
+mu_v = zeros(Ntraj-1,1);
+
+allStates(1,:) = [currentState' trajOutput(1,13)];
+Verr_accu = zeros(6,1);
+
+<span class="comment">% Main simulation loop</span>
+<span class="keyword">for</span> i = 1:Ntraj-1
+
+    phi = currentState(1);
+    x = currentState(2);
+    y = currentState(3);
+    theta = currentState(4:8);
+
+    T_sb = [cos(phi) -sin(phi) 0 x;
+            sin(phi)  cos(phi) 0 y;
+            0         0        1 0.0963;
+            0         0        0 1];
+
+    T_0e = FKinBody(M_0e, Blist, theta);
+    T_se = T_sb * T_b0 * T_0e;
+
+    T_se_d = row2T(trajOutput(i,:));
+    T_se_d_next = row2T(trajOutput(i+1,:));
+
+    [Vb, Verr_accu, Verr] = FeedbackControl(T_se, T_se_d, T_se_d_next, <span class="keyword">...</span>
+                                            Kp, Ki, dt, Verr_accu);
+
+    Jarm = JacobianBody(Blist, theta);
+    T_eb = TransInv(T_0e) * TransInv(T_b0);
+    Jbase = Adjoint(T_eb) * F6;
+    Je = [Jbase Jarm];
+    <span class="comment">% Split Jacobian into angular and linear parts</span>
+    Jw = Je(1:3,:);
+    Jv = Je(4:6,:);
+
+    <span class="comment">% Manipulability matrices</span>
+    Aw = Jw * Jw';
+    Av = Jv * Jv';
+
+    <span class="comment">% Manipulability factors</span>
+    mu_w(i) = manipulability_factor(Aw);
+    mu_v(i) = manipulability_factor(Av);
+
+    <span class="comment">%lambda = 0.01;</span>
+    controls = Je' * ((Je * Je' + lambda^2 * eye(6)) \ Vb);
+    <span class="comment">%controls = pinv(Je) * Vb;</span>
+
+    <span class="comment">% Reorder for NextState: [armSpeeds; wheelSpeeds]</span>
+    jointVel = [controls(5:9); controls(1:4)];
+
+    currentState = NextState(currentState, jointVel, dt, maxJointVel);
+
+    allStates(i+1,:) = [currentState' trajOutput(i+1,13)];
+    allErrors(i,:) = Verr';
+
+<span class="keyword">end</span>
+
+writematrix(allStates, <span class="string">'overallstatesOutput.csv'</span>);
+
+<span class="comment">% Plot Xerr</span>
+figure;
+
+subplot(1,2,1)
+plot(allErrors(:,1:3), <span class="string">'LineWidth'</span>, 1.2)
+xlabel(<span class="string">'Time Step'</span>)
+ylabel(<span class="string">'Angular Error'</span>)
+legend(<span class="string">'\omega_x'</span>, <span class="string">'\omega_y'</span>, <span class="string">'\omega_z'</span>)
+grid <span class="string">on</span>
+
+subplot(1,2,2)
+plot(allErrors(:,4:6), <span class="string">'LineWidth'</span>, 1.2)
+xlabel(<span class="string">'Time Step'</span>)
+ylabel(<span class="string">'Linear Error'</span>)
+legend(<span class="string">'v_x'</span>, <span class="string">'v_y'</span>, <span class="string">'v_z'</span>)
+grid <span class="string">on</span>
+
+<span class="comment">% Plot manipulability factors versus time</span>
+figure;
+plot(mu_w, <span class="string">'LineWidth'</span>, 1.5);
+hold <span class="string">on</span>;
+plot(mu_v, <span class="string">'LineWidth'</span>, 1.5);
+xlabel(<span class="string">'Time Step'</span>);
+ylabel(<span class="string">'Manipulability Factor'</span>);
+legend(<span class="string">'\mu_1(A_\omega)'</span>, <span class="string">'\mu_1(A_v)'</span>);
+title(<span class="string">'Manipulability Factors vs Time'</span>);
+grid <span class="string">on</span>;
+<span class="keyword">function</span> mu = manipulability_factor(A)
+<span class="comment">% manipulability_factor</span>
+<span class="comment">% Computes a scalar manipulability factor from A = J*J'.</span>
+<span class="comment">% This uses the isotropy-style ratio min/max of the ellipsoid eigenvalues.</span>
+
+    A = (A + A') / 2;          <span class="comment">% numerical symmetry</span>
+    eigvals = eig(A);
+    eigvals = real(eigvals);
+    eigvals = max(eigvals, 1e-12);
+
+    mu = min(eigvals) / max(eigvals);
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> plot_manipulability_ellipsoids(Aw, Av, stepnum)
+<span class="comment">% Plot angular and linear manipulability ellipsoids at one timestep</span>
+
+    [V_Aw, D_Aw] = eig(Aw);
+    l_Aw = [sqrt(D_Aw(1,1)), sqrt(D_Aw(2,2)), sqrt(D_Aw(3,3))];
+
+    [V_Av, D_Av] = eig(Av);
+    l_Av = [sqrt(D_Av(1,1)), sqrt(D_Av(2,2)), sqrt(D_Av(3,3))];
+
+    ellipsoid_plot(l_Aw, V_Aw, sprintf(<span class="string">'Angular manipulability ellipsoid at step %d'</span>, stepnum));
+    ellipsoid_plot(l_Av, V_Av, sprintf(<span class="string">'Linear manipulability ellipsoid at step %d'</span>, stepnum));
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> ellipsoid_plot(l_A, v_A, titl)
+<span class="comment">% Reused/adapted from your PDF helper</span>
+<span class="comment">% l_A: [a b c] semi-axis lengths</span>
+<span class="comment">% v_A: 3x3 principal directions</span>
+<span class="comment">% titl: plot title</span>
+
+    [X,Y,Z] = ellipsoid(0,0,0,l_A(1),l_A(2),l_A(3));
+
+    <span class="keyword">for</span> i = 1:21
+        <span class="keyword">for</span> j = 1:21
+            A = v_A * [X(i,j); Y(i,j); Z(i,j)];
+            X(i,j) = A(1);
+            Y(i,j) = A(2);
+            Z(i,j) = A(3);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    figure
+    plot3([0 1.25*max(l_A)*v_A(1,1)], [0 1.25*max(l_A)*v_A(2,1)], [0 1.25*max(l_A)*v_A(3,1)], <span class="string">'r'</span>, <span class="string">'LineWidth'</span>, 2)
+    hold <span class="string">on</span>
+    plot3([0 1.25*max(l_A)*v_A(1,2)], [0 1.25*max(l_A)*v_A(2,2)], [0 1.25*max(l_A)*v_A(3,2)], <span class="string">'b'</span>, <span class="string">'LineWidth'</span>, 2)
+    plot3([0 1.25*max(l_A)*v_A(1,3)], [0 1.25*max(l_A)*v_A(2,3)], [0 1.25*max(l_A)*v_A(3,3)], <span class="string">'g'</span>, <span class="string">'LineWidth'</span>, 2)
+
+    plot3([0 1.5*max(l_A)], [0 0], [0 0], <span class="string">'r'</span>)
+    plot3([0 0], [0 1.5*max(l_A)], [0 0], <span class="string">'b'</span>)
+    plot3([0 0], [0 0], [0 1.5*max(l_A)], <span class="string">'g'</span>)
+
+    s = surf(X,Y,Z);
+    s.EdgeColor = <span class="string">'none'</span>;
+    s.FaceColor = [0.5 0.5 0.5];
+    s.FaceAlpha = 1;
+
+    grid <span class="string">on</span>
+    axis <span class="string">equal</span>
+    xlabel(<span class="string">'X-direction'</span>)
+    ylabel(<span class="string">'Y-direction'</span>)
+    zlabel(<span class="string">'Z-direction'</span>)
+    legend(<span class="string">'x-axis'</span>,<span class="string">'y-axis'</span>,<span class="string">'z-axis'</span>)
+    title(titl)
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> T = row2T(T_V)
+T = [T_V(1)  T_V(2)  T_V(3)  T_V(10);
+     T_V(4)  T_V(5)  T_V(6)  T_V(11);
+     T_V(7)  T_V(8)  T_V(9)  T_V(12);
+     0       0       0       1];
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="overshoot_main_01.png" alt=""> <img vspace="5" hspace="5" src="overshoot_main_02.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Full Program / Wrapper Script
+% Test Script for Full Program / Wrapper Script (Component 4)
+% Mobile Manipulation Capstone – Full Pick-and-Place Simulation
+%
+% This script combines the TrajectoryGenerator, FeedbackControl, and
+% NextState functions to simulate the full mobile manipulation task.
+% The program generates a reference trajectory, computes the control
+% inputs required to follow the trajectory, updates the robot state over
+% time, stores the resulting robot configurations, and plots both the
+% end-effector error and manipulability factors.
+%
+% Written by Brandon Lopez
+% UCSD Mechatronics & Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
+
+close all;
+clear;
+clc;
+
+% Controller gains and timestep
+Kp = 15 * eye(6); %10
+Ki = 2* eye(6);  %2
+lambda = 0.01;
+dt = 0.01;
+maxJointVel = 20;
+
+% Cube configurations
+x_init = 1.0;
+y_init = 0.0;
+z_init = 0.025;
+phi_init = 0;
+
+x_final = 0;
+y_final = -1.0;
+z_final = 0.025;
+phi_final = -pi/2;
+
+T_sc_init = [cos(phi_init) -sin(phi_init) 0 x_init;
+             sin(phi_init)  cos(phi_init) 0 y_init;
+             0              0             1 z_init;
+             0              0             0 1];
+
+T_sc_final = [cos(phi_final) -sin(phi_final) 0 x_final;
+              sin(phi_final)  cos(phi_final) 0 y_final;
+              0               0              1 z_final;
+              0               0              0  1];
+
+% Grasp and standoff configurations
+T_ce_grasp = [-sqrt(2)/2  0  sqrt(2)/2   0;
+               0          1  0           0;
+              -sqrt(2)/2  0 -sqrt(2)/2   0;
+               0          0  0           1];
+
+T_ce_standoff = [-sqrt(2)/2  0  sqrt(2)/2   0;
+                  0          1  0           0;
+                 -sqrt(2)/2  0 -sqrt(2)/2   0.10;
+                  0          0  0           1];
+
+% youBot constants
+l = 0.47 / 2;
+w = 0.3 / 2;
+r = 0.0475;
+
+T_b0 = [1 0 0 0.1662;
+        0 1 0 0;
+        0 0 1 0.0026;
+        0 0 0 1];
+
+M_0e = [1 0 0 0.033;
+        0 1 0 0;
+        0 0 1 0.6546;
+        0 0 0 1];
+
+Blist = [0  0  1  0       0.033   0;
+         0 -1  0 -0.5076  0       0;
+         0 -1  0 -0.3526  0       0;
+         0 -1  0 -0.2176  0       0;
+         0  0  1  0       0       0]';
+
+F = (r/4) * [ -1/(l+w),   1/(l+w),   1/(l+w),  -1/(l+w);
+               1,          1,          1,         1;
+              -1,          1,         -1,         1 ];
+
+F6 = [0 0 0 0;
+      0 0 0 0;
+      F(1,:);
+      F(2,:);
+      F(3,:);
+      0 0 0 0];
+
+% Initial actual robot state
+% [phi; x; y; arm1; arm2; arm3; arm4; arm5; wheel1; wheel2; wheel3; wheel4]
+currentState = zeros(12,1);
+% Or, if you want the offset test case, use:
+%currentState = [0; 0; 0; 0; 0; 0.2; -1.6; 0; 0; 0; 0; 0];
+
+% Compute actual initial end-effector configuration from currentState
+phi = currentState(1);
+x = currentState(2);
+y = currentState(3);
+theta = currentState(4:8);
+
+T_sb = [cos(phi) -sin(phi) 0 x;
+        sin(phi)  cos(phi) 0 y;
+        0         0        1 0.0963;
+        0         0        0 1];
+
+T_0e = FKinBody(M_0e, Blist, theta);
+T_se_init = T_sb * T_b0 * T_0e;
+
+% Generate reference trajectory from actual initial pose
+trajOutput = TrajectoryGenerator(T_se_init, T_sc_init, T_sc_final, ...
+                                 T_ce_grasp, T_ce_standoff);
+
+writematrix(trajOutput, 'overtrajectoryOutput.csv');
+
+% Storage
+Ntraj = size(trajOutput, 1);
+allStates = zeros(Ntraj, 13);
+allErrors = zeros(Ntraj - 1, 6);
+
+% Storage for manipulability factors
+mu_w = zeros(Ntraj-1,1);
+mu_v = zeros(Ntraj-1,1);
+
+allStates(1,:) = [currentState' trajOutput(1,13)];
+Verr_accu = zeros(6,1);
+
+% Main simulation loop
+for i = 1:Ntraj-1
+
+    phi = currentState(1);
+    x = currentState(2);
+    y = currentState(3);
+    theta = currentState(4:8);
+
+    T_sb = [cos(phi) -sin(phi) 0 x;
+            sin(phi)  cos(phi) 0 y;
+            0         0        1 0.0963;
+            0         0        0 1];
+
+    T_0e = FKinBody(M_0e, Blist, theta);
+    T_se = T_sb * T_b0 * T_0e;
+
+    T_se_d = row2T(trajOutput(i,:));
+    T_se_d_next = row2T(trajOutput(i+1,:));
+
+    [Vb, Verr_accu, Verr] = FeedbackControl(T_se, T_se_d, T_se_d_next, ...
+                                            Kp, Ki, dt, Verr_accu);
+
+    Jarm = JacobianBody(Blist, theta);
+    T_eb = TransInv(T_0e) * TransInv(T_b0);
+    Jbase = Adjoint(T_eb) * F6;
+    Je = [Jbase Jarm];
+    % Split Jacobian into angular and linear parts
+    Jw = Je(1:3,:);
+    Jv = Je(4:6,:);
+
+    % Manipulability matrices
+    Aw = Jw * Jw';
+    Av = Jv * Jv';
+
+    % Manipulability factors
+    mu_w(i) = manipulability_factor(Aw);
+    mu_v(i) = manipulability_factor(Av);
+
+    %lambda = 0.01;
+    controls = Je' * ((Je * Je' + lambda^2 * eye(6)) \ Vb);
+    %controls = pinv(Je) * Vb;
+
+    % Reorder for NextState: [armSpeeds; wheelSpeeds]
+    jointVel = [controls(5:9); controls(1:4)];
+
+    currentState = NextState(currentState, jointVel, dt, maxJointVel);
+
+    allStates(i+1,:) = [currentState' trajOutput(i+1,13)];
+    allErrors(i,:) = Verr';
+    
+end
+
+writematrix(allStates, 'overallstatesOutput.csv');
+
+% Plot Xerr
+figure;
+
+subplot(1,2,1)
+plot(allErrors(:,1:3), 'LineWidth', 1.2)
+xlabel('Time Step')
+ylabel('Angular Error')
+legend('\omega_x', '\omega_y', '\omega_z')
+grid on
+
+subplot(1,2,2)
+plot(allErrors(:,4:6), 'LineWidth', 1.2)
+xlabel('Time Step')
+ylabel('Linear Error')
+legend('v_x', 'v_y', 'v_z')
+grid on
+
+% Plot manipulability factors versus time
+figure;
+plot(mu_w, 'LineWidth', 1.5);
+hold on;
+plot(mu_v, 'LineWidth', 1.5);
+xlabel('Time Step');
+ylabel('Manipulability Factor');
+legend('\mu_1(A_\omega)', '\mu_1(A_v)');
+title('Manipulability Factors vs Time');
+grid on;
+function mu = manipulability_factor(A)
+% manipulability_factor
+% Computes a scalar manipulability factor from A = J*J'.
+% This uses the isotropy-style ratio min/max of the ellipsoid eigenvalues.
+
+    A = (A + A') / 2;          % numerical symmetry
+    eigvals = eig(A);
+    eigvals = real(eigvals);
+    eigvals = max(eigvals, 1e-12);
+
+    mu = min(eigvals) / max(eigvals);
+end
+
+function plot_manipulability_ellipsoids(Aw, Av, stepnum)
+% Plot angular and linear manipulability ellipsoids at one timestep
+
+    [V_Aw, D_Aw] = eig(Aw);
+    l_Aw = [sqrt(D_Aw(1,1)), sqrt(D_Aw(2,2)), sqrt(D_Aw(3,3))];
+
+    [V_Av, D_Av] = eig(Av);
+    l_Av = [sqrt(D_Av(1,1)), sqrt(D_Av(2,2)), sqrt(D_Av(3,3))];
+
+    ellipsoid_plot(l_Aw, V_Aw, sprintf('Angular manipulability ellipsoid at step %d', stepnum));
+    ellipsoid_plot(l_Av, V_Av, sprintf('Linear manipulability ellipsoid at step %d', stepnum));
+end
+
+function ellipsoid_plot(l_A, v_A, titl)
+% Reused/adapted from your PDF helper
+% l_A: [a b c] semi-axis lengths
+% v_A: 3x3 principal directions
+% titl: plot title
+
+    [X,Y,Z] = ellipsoid(0,0,0,l_A(1),l_A(2),l_A(3));
+
+    for i = 1:21
+        for j = 1:21
+            A = v_A * [X(i,j); Y(i,j); Z(i,j)];
+            X(i,j) = A(1);
+            Y(i,j) = A(2);
+            Z(i,j) = A(3);
+        end
+    end
+
+    figure
+    plot3([0 1.25*max(l_A)*v_A(1,1)], [0 1.25*max(l_A)*v_A(2,1)], [0 1.25*max(l_A)*v_A(3,1)], 'r', 'LineWidth', 2)
+    hold on
+    plot3([0 1.25*max(l_A)*v_A(1,2)], [0 1.25*max(l_A)*v_A(2,2)], [0 1.25*max(l_A)*v_A(3,2)], 'b', 'LineWidth', 2)
+    plot3([0 1.25*max(l_A)*v_A(1,3)], [0 1.25*max(l_A)*v_A(2,3)], [0 1.25*max(l_A)*v_A(3,3)], 'g', 'LineWidth', 2)
+
+    plot3([0 1.5*max(l_A)], [0 0], [0 0], 'r')
+    plot3([0 0], [0 1.5*max(l_A)], [0 0], 'b')
+    plot3([0 0], [0 0], [0 1.5*max(l_A)], 'g')
+
+    s = surf(X,Y,Z);
+    s.EdgeColor = 'none';
+    s.FaceColor = [0.5 0.5 0.5];
+    s.FaceAlpha = 1;
+
+    grid on
+    axis equal
+    xlabel('X-direction')
+    ylabel('Y-direction')
+    zlabel('Z-direction')
+    legend('x-axis','y-axis','z-axis')
+    title(titl)
+end
+
+function T = row2T(T_V)
+T = [T_V(1)  T_V(2)  T_V(3)  T_V(10);
+     T_V(4)  T_V(5)  T_V(6)  T_V(11);
+     T_V(7)  T_V(8)  T_V(9)  T_V(12);
+     0       0       0       1];
+end
+##### SOURCE END #####
+--></body></html>
