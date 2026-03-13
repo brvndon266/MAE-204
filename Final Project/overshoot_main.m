@@ -187,7 +187,7 @@ subplot(1,2,1)
 plot(allErrors(:,1:3), 'LineWidth', 1.2)
 xlabel('Time Step')
 ylabel('Angular Error')
-legend('\omega_x', '\omega_y', '\omega_z')
+legend('\omega_x', '\omega_y', '\omega_z',Location='best')
 grid on
 
 subplot(1,2,2)
