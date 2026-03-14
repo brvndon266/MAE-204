@@ -33,6 +33,33 @@ trajOutput = [];
 dt = 0.01;
 method = 5; % quintic (fifth-order polynomial) time scaling.
 
+% Example usage (for publishing/testing)
+
+T_se_init = eye(4);
+
+T_sc_init = [1 0 0 1;
+             0 1 0 0;
+             0 0 1 0.025;
+             0 0 0 1];
+
+T_sc_final = [0 -1 0 0;
+              1  0 0 -1;
+              0  0 1 0.025;
+              0  0 0 1];
+
+T_ce_grasp = [-sqrt(2)/2  0  sqrt(2)/2 0;
+               0          1  0         0;
+              -sqrt(2)/2  0 -sqrt(2)/2 0;
+               0          0  0         1];
+
+T_ce_standoff = [-sqrt(2)/2  0  sqrt(2)/2 0;
+                  0          1  0         0;
+                 -sqrt(2)/2  0 -sqrt(2)/2 0.1;
+                  0          0  0         1];
+
+trajOutput = TrajectoryGenerator(T_se_init,T_sc_init,T_sc_final,...
+                                 T_ce_grasp,T_ce_standoff);
+
 % Step 1. Move the gripper from its initial configuration to a "standoff" % configuration a few cm above the block.
 N1 = 300;
 Tf = N1*dt;

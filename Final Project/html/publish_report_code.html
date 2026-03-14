@@ -1,0 +1,681 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Mobile Manipulation Project Code Report</title><meta name="generator" content="MATLAB 9.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2026-03-13"><meta name="DC.source" content="publish_report_code.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Mobile Manipulation Project Code Report</h1><!--introduction--><p>Brandon Lopez UCSD Mechatronics &amp; Controls Master's Program</p><p>This published document contains the main MATLAB code used for the mobile manipulation capstone project, including the trajectory generation, feedback controller, state propagation, and full wrapper script.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">TrajectoryGenerator Function</a></li><li><a href="#2">FeedbackControl Function</a></li><li><a href="#3">NextState Function</a></li><li><a href="#4">Full Program / Wrapper Script</a></li></ul></div><h2 id="1">TrajectoryGenerator Function</h2><p>This function generates the reference end-effector trajectory for the pick-and-place task.</p><pre class="codeinput">type(<span class="string">'TrajectoryGenerator.m'</span>)
+</pre><pre class="codeoutput">
+function trajOutput = TrajectoryGenerator(T_se_init,  T_sc_init, T_sc_final, T_ce_grasp, T_ce_standoff )
+% TrajectoryGenerator
+
+% % Written by Brandon Lopez
+% UCSD Mechatronics &amp; Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
+
+% This function generates a reference trajectory for the end-effector of a
+% robot performing a pick-and-place task. The trajectory moves the gripper
+% from its initial configuration to grasp an object, transport it to a new
+% location, and release it.
+%
+% Inputs:
+%   T_se_init     - Initial configuration of the end-effector in the space frame
+%   T_sc_init     - Initial configuration of the cube in the space frame
+%   T_sc_final    - Desired final configuration of the cube in the space frame
+%   T_ce_grasp    - End-effector configuration relative to the cube when grasping
+%   T_ce_standoff - End-effector configuration relative to the cube when in the standoff position above the cube
+%
+% Output:
+%   trajOutput - A trajectory matrix where each row corresponds to a
+%                configuration of the end-effector:
+%
+%                [r11 r12 r13 r21 r22 r23 r31 r32 r33 px py pz gripper]
+%
+%                The first 9 elements represent the rotation matrix,
+%                the next 3 represent the position of the end-effector,
+%                and the final element represents the gripper state
+%                (0 = open, 1 = closed).
+
+% Initialize
+trajOutput = [];
+dt = 0.01;
+method = 5; % quintic (fifth-order polynomial) time scaling.
+
+% Step 1. Move the gripper from its initial configuration to a "standoff" % configuration a few cm above the block.
+N1 = 300;
+Tf = N1*dt;
+Xstart = T_se_init;
+Xend = T_sc_init*T_ce_standoff;
+traj = ScrewTrajectory(Xstart, Xend, Tf, N1, method);
+% traj = CartesianTrajectory(Xstart, Xend, Tf, N, method);
+
+for i = 1:N1
+    tt = traj{i};
+    trajVec = [tt(1,1),tt(1,2),tt(1,3),tt(2,1),tt(2,2),tt(2,3),...
+               tt(3,1),tt(3,2),tt(3,3),tt(1,4),tt(2,4),tt(3,4),...
+               0];
+    trajOutput = [trajOutput; trajVec];
+end
+
+% Step 2. Move the gripper down to the grasp position.
+N2 = 350;
+Tf = N2*dt;
+Xstart = traj{end};
+Xend = T_sc_init*T_ce_grasp;
+traj = ScrewTrajectory(Xstart, Xend, Tf, N2, method);
+% traj = CartesianTrajectory(Xstart, Xend, Tf, N, method);
+
+for i = 1:N2
+    tt = traj{i};
+    trajVec = [tt(1,1),tt(1,2),tt(1,3),tt(2,1),tt(2,2),tt(2,3),...
+               tt(3,1),tt(3,2),tt(3,3),tt(1,4),tt(2,4),tt(3,4),...
+               0];
+    trajOutput = [trajOutput; trajVec];
+end
+
+% Step 3. Close the gripper.
+N3 = 1;
+trajVec = trajOutput(end,:);
+trajVec(end) = 1;
+trajOutput = [trajOutput; trajVec];
+
+% Step 4. Move the gripper back to the "standoff" configuration
+N4 = 350;
+Tf = N4*dt;
+Xstart = traj{end};
+Xend = T_sc_init*T_ce_standoff;
+traj = ScrewTrajectory(Xstart, Xend, Tf, N4, method);
+% traj = CartesianTrajectory(Xstart, Xend, Tf, N, method);
+
+for i = 1:N4
+    tt = traj{i};
+    trajVec = [tt(1,1),tt(1,2),tt(1,3),tt(2,1),tt(2,2),tt(2,3),...
+               tt(3,1),tt(3,2),tt(3,3),tt(1,4),tt(2,4),tt(3,4),...
+               1];
+    trajOutput = [trajOutput; trajVec];
+end
+
+% Step 5. Move the gripper to a "standoff" configuration above the final configuration.
+N5 = 500;
+Tf = N5*dt;
+Xstart = traj{end};
+Xend = T_sc_final*T_ce_standoff;
+traj = ScrewTrajectory(Xstart, Xend, Tf, N5, method);
+% traj = CartesianTrajectory(Xstart, Xend, Tf, N, method);
+
+for i = 1:N5
+    tt = traj{i};
+    trajVec = [tt(1,1),tt(1,2),tt(1,3),tt(2,1),tt(2,2),tt(2,3),...
+               tt(3,1),tt(3,2),tt(3,3),tt(1,4),tt(2,4),tt(3,4),...
+               1];
+    trajOutput = [trajOutput; trajVec];
+end
+
+% Step 6. Move the gripper to the final configuration of the object.
+N6 = 500;
+Tf = N6*dt;
+Xstart = traj{end};
+Xend = T_sc_final*T_ce_grasp;
+traj = ScrewTrajectory(Xstart, Xend, Tf, N6, method);
+% traj = CartesianTrajectory(Xstart, Xend, Tf, N, method);
+
+for i = 1:N6
+    tt = traj{i};
+    trajVec = [tt(1,1),tt(1,2),tt(1,3),tt(2,1),tt(2,2),tt(2,3),...
+               tt(3,1),tt(3,2),tt(3,3),tt(1,4),tt(2,4),tt(3,4),...
+               1];
+    trajOutput = [trajOutput; trajVec];
+end
+
+% Step 7. Open the gripper.
+N7 = 1;
+trajVec = trajOutput(end,:);
+trajVec(end) = 0;
+trajOutput = [trajOutput; trajVec];
+
+% Step 8. Move the gripper back to the "standoff" configuration
+N8 = 500;
+Tf = N8*dt;
+Xstart = traj{end};
+Xend = T_sc_final*T_ce_standoff;
+traj = ScrewTrajectory(Xstart, Xend, Tf, N8, method);
+% traj = CartesianTrajectory(Xstart, Xend, Tf, N, method);
+
+for i = 1:N8
+    tt = traj{i};
+    trajVec = [tt(1,1),tt(1,2),tt(1,3),tt(2,1),tt(2,2),tt(2,3),...
+               tt(3,1),tt(3,2),tt(3,3),tt(1,4),tt(2,4),tt(3,4),...
+               0];
+    trajOutput = [trajOutput; trajVec];
+end
+
+grip_start = N1 + N2 + N3;
+grip_end = N1 + N2 + N3 + N4 + N5 + N6 + N7;
+trajOutput(grip_start:grip_end,end) = 1; % set gripper state to remain closed during transit
+
+end
+</pre><h2 id="2">FeedbackControl Function</h2><p>This function computes the commanded end-effector twist using a feedforward-plus-PI control law.</p><pre class="codeinput">type(<span class="string">'FeedbackControl.m'</span>)
+</pre><pre class="codeoutput">
+function [Vb, Verr_accu, Verr] = FeedbackControl(T_se, T_se_d, T_se_d_next, Kp, Ki, dt, Verr_accu)
+% FeedbackControl
+
+% Written by Brandon Lopez
+% UCSD Mechatronics &amp; Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
+
+% This function computes the commanded end-effector twist using a
+% feedforward-plus-feedback control law. The controller combines the
+% reference twist needed to move from the current desired configuration
+% to the next desired configuration with proportional-integral correction
+% based on the current end-effector error.
+%
+% Inputs:
+%   T_se        - Current actual end-effector configuration X (4x4)
+%   T_se_d      - Current desired end-effector configuration X_d (4x4)
+%   T_se_d_next - Desired end-effector configuration at the next timestep
+%                 X_d,next (4x4)
+%   Kp          - Proportional gain matrix (6x6)
+%   Ki          - Integral gain matrix (6x6)
+%   dt          - Timestep between reference trajectory configurations
+%   Verr_accu   - Accumulated end-effector error integral (6x1)
+%
+% Outputs:
+%   Vb          - Commanded end-effector twist expressed in frame {e} (6x1)
+%   Verr_accu   - Updated accumulated error integral (6x1)
+%   Verr        - Current end-effector error twist X_err (6x1)
+%
+
+
+% Step 1: Compute the feedforward reference twist Vd
+Vd_M = TransInv(T_se_d) * T_se_d_next;
+Vd = se3ToVec(MatrixLog6(Vd_M)) / dt;
+
+% Step 2: Compute the current configuration error twist X_err
+Verr_M = TransInv(T_se) * T_se_d;
+Verr = se3ToVec(MatrixLog6(Verr_M));
+
+% Step 3: Compute the adjoint transformation
+AdT = Adjoint(TransInv(T_se) * T_se_d);
+
+% Step 4: Update the accumulated integral error
+Verr_accu = Verr_accu + Verr * dt;
+
+% Step 5: Compute the feedforward-plus-PI control law
+Vb = AdT * Vd + Kp * Verr + Ki * Verr_accu;
+
+end
+</pre><h2 id="3">NextState Function</h2><p>This function updates the robot configuration using first-order Euler integration and wheel odometry.</p><pre class="codeinput">type(<span class="string">'NextState.m'</span>)
+</pre><pre class="codeoutput">
+function nextState = NextState(currentState, jointVel, dt, maxJointVel)
+% NextState
+
+% Written by Brandon Lopez
+% UCSD Mechatronics &amp; Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
+
+% Computes the next configuration of the youBot using first-order Euler
+% integration. The state includes chassis configuration, arm joint angles,
+% and wheel angles. Wheel motions are also used to update the chassis pose
+% through odometry.
+%
+% Inputs:
+%   currentState - 12x1 vector:
+%                  [phi; x; y; arm1; arm2; arm3; arm4; arm5; wheel1; wheel2; wheel3; wheel4]
+%   jointVel     - 9x1 vector:
+%                  [arm1dot; arm2dot; arm3dot; arm4dot; arm5dot; u1; u2; u3; u4]
+%   dt           - timestep
+%   maxJointVel  - scalar maximum magnitude for all joint and wheel speeds
+%
+% Output:
+%   nextState    - 12x1 vector of updated state
+
+
+% Ensure column vectors
+currentState = currentState(:);
+jointVel = jointVel(:);
+
+% Limit all 9 commanded speeds
+jointVel = max(-maxJointVel, min(maxJointVel, jointVel));
+
+% Split state
+phi = currentState(1);
+x = currentState(2);
+y = currentState(3);
+arm = currentState(4:8);
+wheels = currentState(9:12);
+
+% Split controls
+armSpeeds = jointVel(1:5);
+wheelSpeeds = jointVel(6:9);
+
+% Euler update for arm joints and wheel angles
+newArm = arm + armSpeeds * dt;
+newWheels = wheels + wheelSpeeds * dt;
+
+% youBot geometry constants
+r = 0.0475;      % wheel radius
+l = 0.235;       % half-length
+w = 0.15;        % half-width
+
+% Wheel angle change
+deltaTheta = wheelSpeeds * dt;
+
+% Body twist from wheel motions
+F = (r/4) * [ -1/(l+w),  1/(l+w),  1/(l+w), -1/(l+w);
+               1,         1,         1,         1;
+              -1,         1,        -1,         1 ];
+
+Vb = F * deltaTheta;
+
+wbz = Vb(1);
+vbx = Vb(2);
+vby = Vb(3);
+
+% Change in chassis configuration in body frame
+if abs(wbz) &lt; 1e-9
+    deltaQb = [0;
+               vbx;
+               vby];
+else
+    deltaQb = [wbz;
+               (vbx*sin(wbz) + vby*(cos(wbz)-1)) / wbz;
+               (vby*sin(wbz) + vbx*(1-cos(wbz))) / wbz];
+end
+
+% Convert body-frame change to space/world frame
+T = [1, 0, 0;
+     0, cos(phi), -sin(phi);
+     0, sin(phi),  cos(phi)];
+
+deltaQ = T * deltaQb;
+
+newChassis = [phi; x; y] + deltaQ;
+
+% Assemble next state
+nextState = [newChassis;
+             newArm;
+             newWheels];
+end
+</pre><h2 id="4">Full Program / Wrapper Script</h2><p>This script combines the trajectory generator, controller, and state update functions to simulate the complete pick-and-place task.</p><pre class="codeinput">type(<span class="string">'best_main.m'</span>)
+</pre><pre class="codeoutput">
+%% Full Program / Wrapper Script
+% Test Script for Full Program / Wrapper Script (Component 4)
+% Mobile Manipulation Capstone &#8211; Full Pick-and-Place Simulation
+%
+% This script combines the TrajectoryGenerator, FeedbackControl, and
+% NextState functions to simulate the full mobile manipulation task.
+% The program generates a reference trajectory, computes the control
+% inputs required to follow the trajectory, updates the robot state over
+% time, stores the resulting robot configurations, and plots both the
+% end-effector error and manipulability factors.
+%
+% Written by Brandon Lopez
+% UCSD Mechatronics &amp; Controls Master's Program
+% brandon.lopez.miramontes@gmail.com
+
+close all;
+clear;
+clc;
+
+% Controller gains and timestep
+Kp = 3 * eye(6);
+Ki = 0.001 * eye(6);
+lambda = 0.01;
+dt = 0.01;
+maxJointVel = 20;
+
+% Cube configurations
+x_init = 1.0;
+y_init = 0.0;
+z_init = 0.025;
+phi_init = 0;
+
+x_final = 0;
+y_final = -1.0;
+z_final = 0.025;
+phi_final = -pi/2;
+
+T_sc_init = [cos(phi_init) -sin(phi_init) 0 x_init;
+             sin(phi_init)  cos(phi_init) 0 y_init;
+             0              0             1 z_init;
+             0              0             0 1];
+
+T_sc_final = [cos(phi_final) -sin(phi_final) 0 x_final;
+              sin(phi_final)  cos(phi_final) 0 y_final;
+              0               0              1 z_final;
+              0               0              0  1];
+
+% Grasp and standoff configurations
+T_ce_grasp = [-sqrt(2)/2  0  sqrt(2)/2   0;
+               0          1  0           0;
+              -sqrt(2)/2  0 -sqrt(2)/2   0;
+               0          0  0           1];
+
+T_ce_standoff = [-sqrt(2)/2  0  sqrt(2)/2   0;
+                  0          1  0           0;
+                 -sqrt(2)/2  0 -sqrt(2)/2   0.10;
+                  0          0  0           1];
+
+% youBot constants
+l = 0.47 / 2;
+w = 0.3 / 2;
+r = 0.0475;
+
+T_b0 = [1 0 0 0.1662;
+        0 1 0 0;
+        0 0 1 0.0026;
+        0 0 0 1];
+
+M_0e = [1 0 0 0.033;
+        0 1 0 0;
+        0 0 1 0.6546;
+        0 0 0 1];
+
+Blist = [0  0  1  0       0.033   0;
+         0 -1  0 -0.5076  0       0;
+         0 -1  0 -0.3526  0       0;
+         0 -1  0 -0.2176  0       0;
+         0  0  1  0       0       0]';
+
+F = (r/4) * [ -1/(l+w),   1/(l+w),   1/(l+w),  -1/(l+w);
+               1,          1,          1,         1;
+              -1,          1,         -1,         1 ];
+
+F6 = [0 0 0 0;
+      0 0 0 0;
+      F(1,:);
+      F(2,:);
+      F(3,:);
+      0 0 0 0];
+
+% Initial actual robot state
+% [phi; x; y; arm1; arm2; arm3; arm4; arm5; wheel1; wheel2; wheel3; wheel4]
+currentState = zeros(12,1);
+% Or, if you want the offset test case, use:
+%currentState = [0; 0; 0; 0; 0; 0.2; -1.6; 0; 0; 0; 0; 0];
+
+% Compute actual initial end-effector configuration from currentState
+phi = currentState(1);
+x = currentState(2);
+y = currentState(3);
+theta = currentState(4:8);
+
+T_sb = [cos(phi) -sin(phi) 0 x;
+        sin(phi)  cos(phi) 0 y;
+        0         0        1 0.0963;
+        0         0        0 1];
+
+T_0e = FKinBody(M_0e, Blist, theta);
+T_se_init = T_sb * T_b0 * T_0e;
+
+% Generate reference trajectory from actual initial pose
+trajOutput = TrajectoryGenerator(T_se_init, T_sc_init, T_sc_final, ...
+                                 T_ce_grasp, T_ce_standoff);
+
+writematrix(trajOutput, 'besttrajectoryOutput.csv');
+
+% Storage
+Ntraj = size(trajOutput, 1);
+allStates = zeros(Ntraj, 13);
+allErrors = zeros(Ntraj - 1, 6);
+
+% Storage for manipulability factors
+mu_w = zeros(Ntraj-1,1);
+mu_v = zeros(Ntraj-1,1);
+
+allStates(1,:) = [currentState' trajOutput(1,13)];
+Verr_accu = zeros(6,1);
+
+% Main simulation loop
+for i = 1:Ntraj-1
+
+    phi = currentState(1);
+    x = currentState(2);
+    y = currentState(3);
+    theta = currentState(4:8);
+
+    T_sb = [cos(phi) -sin(phi) 0 x;
+            sin(phi)  cos(phi) 0 y;
+            0         0        1 0.0963;
+            0         0        0 1];
+
+    T_0e = FKinBody(M_0e, Blist, theta);
+    T_se = T_sb * T_b0 * T_0e;
+
+    T_se_d = row2T(trajOutput(i,:));
+    T_se_d_next = row2T(trajOutput(i+1,:));
+
+    [Vb, Verr_accu, Verr] = FeedbackControl(T_se, T_se_d, T_se_d_next, ...
+                                            Kp, Ki, dt, Verr_accu);
+
+    Jarm = JacobianBody(Blist, theta);
+    T_eb = TransInv(T_0e) * TransInv(T_b0);
+    Jbase = Adjoint(T_eb) * F6;
+    Je = [Jbase Jarm];
+    % Split Jacobian into angular and linear parts
+    Jw = Je(1:3,:);
+    Jv = Je(4:6,:);
+
+    % Manipulability matrices
+    Aw = Jw * Jw';
+    Av = Jv * Jv';
+
+    % Manipulability factors
+    mu_w(i) = manipulability_factor(Aw);
+    mu_v(i) = manipulability_factor(Av);
+
+    %lambda = 0.01;
+    controls = Je' * ((Je * Je' + lambda^2 * eye(6)) \ Vb);
+    %controls = pinv(Je) * Vb;
+
+    % Reorder for NextState: [armSpeeds; wheelSpeeds]
+    jointVel = [controls(5:9); controls(1:4)];
+
+    currentState = NextState(currentState, jointVel, dt, maxJointVel);
+
+    allStates(i+1,:) = [currentState' trajOutput(i+1,13)];
+    allErrors(i,:) = Verr';
+    
+end
+
+writematrix(allStates, 'bestallstatesOutput.csv');
+
+% Plot Xerr
+figure;
+
+subplot(1,2,1)
+plot(allErrors(:,1:3), 'LineWidth', 1.2)
+xlabel('Time Step')
+ylabel('Angular Error')
+legend('\omega_x', '\omega_y', '\omega_z')
+grid on
+
+subplot(1,2,2)
+plot(allErrors(:,4:6), 'LineWidth', 1.2)
+xlabel('Time Step')
+ylabel('Linear Error')
+legend('v_x', 'v_y', 'v_z')
+grid on
+
+% Plot manipulability factors versus time
+figure;
+plot(mu_w, 'LineWidth', 1.5);
+hold on;
+plot(mu_v, 'LineWidth', 1.5);
+xlabel('Time Step');
+ylabel('Manipulability Factor');
+legend('\mu_1(A_\omega)', '\mu_1(A_v)');
+title('Manipulability Factors vs Time');
+grid on;
+function mu = manipulability_factor(A)
+% manipulability_factor
+% Computes a scalar manipulability factor from A = J*J'.
+% This uses the isotropy-style ratio min/max of the ellipsoid eigenvalues.
+
+    A = (A + A') / 2;          % numerical symmetry
+    eigvals = eig(A);
+    eigvals = real(eigvals);
+    eigvals = max(eigvals, 1e-12);
+
+    mu = min(eigvals) / max(eigvals);
+end
+
+function plot_manipulability_ellipsoids(Aw, Av, stepnum)
+% Plot angular and linear manipulability ellipsoids at one timestep
+
+    [V_Aw, D_Aw] = eig(Aw);
+    l_Aw = [sqrt(D_Aw(1,1)), sqrt(D_Aw(2,2)), sqrt(D_Aw(3,3))];
+
+    [V_Av, D_Av] = eig(Av);
+    l_Av = [sqrt(D_Av(1,1)), sqrt(D_Av(2,2)), sqrt(D_Av(3,3))];
+
+    ellipsoid_plot(l_Aw, V_Aw, sprintf('Angular manipulability ellipsoid at step %d', stepnum));
+    ellipsoid_plot(l_Av, V_Av, sprintf('Linear manipulability ellipsoid at step %d', stepnum));
+end
+
+function ellipsoid_plot(l_A, v_A, titl)
+% Reused/adapted from your PDF helper
+% l_A: [a b c] semi-axis lengths
+% v_A: 3x3 principal directions
+% titl: plot title
+
+    [X,Y,Z] = ellipsoid(0,0,0,l_A(1),l_A(2),l_A(3));
+
+    for i = 1:21
+        for j = 1:21
+            A = v_A * [X(i,j); Y(i,j); Z(i,j)];
+            X(i,j) = A(1);
+            Y(i,j) = A(2);
+            Z(i,j) = A(3);
+        end
+    end
+
+    figure
+    plot3([0 1.25*max(l_A)*v_A(1,1)], [0 1.25*max(l_A)*v_A(2,1)], [0 1.25*max(l_A)*v_A(3,1)], 'r', 'LineWidth', 2)
+    hold on
+    plot3([0 1.25*max(l_A)*v_A(1,2)], [0 1.25*max(l_A)*v_A(2,2)], [0 1.25*max(l_A)*v_A(3,2)], 'b', 'LineWidth', 2)
+    plot3([0 1.25*max(l_A)*v_A(1,3)], [0 1.25*max(l_A)*v_A(2,3)], [0 1.25*max(l_A)*v_A(3,3)], 'g', 'LineWidth', 2)
+
+    plot3([0 1.5*max(l_A)], [0 0], [0 0], 'r')
+    plot3([0 0], [0 1.5*max(l_A)], [0 0], 'b')
+    plot3([0 0], [0 0], [0 1.5*max(l_A)], 'g')
+
+    s = surf(X,Y,Z);
+    s.EdgeColor = 'none';
+    s.FaceColor = [0.5 0.5 0.5];
+    s.FaceAlpha = 1;
+
+    grid on
+    axis equal
+    xlabel('X-direction')
+    ylabel('Y-direction')
+    zlabel('Z-direction')
+    legend('x-axis','y-axis','z-axis')
+    title(titl)
+end
+
+function T = row2T(T_V)
+T = [T_V(1)  T_V(2)  T_V(3)  T_V(10);
+     T_V(4)  T_V(5)  T_V(6)  T_V(11);
+     T_V(7)  T_V(8)  T_V(9)  T_V(12);
+     0       0       0       1];
+end
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Mobile Manipulation Project Code Report
+% Brandon Lopez
+% UCSD Mechatronics & Controls Master's Program
+%
+% This published document contains the main MATLAB code used for the
+% mobile manipulation capstone project, including the trajectory
+% generation, feedback controller, state propagation, and full wrapper
+% script.
+
+%% TrajectoryGenerator Function
+% This function generates the reference end-effector trajectory for the
+% pick-and-place task.
+
+type('TrajectoryGenerator.m')
+
+%% FeedbackControl Function
+% This function computes the commanded end-effector twist using a
+% feedforward-plus-PI control law.
+
+type('FeedbackControl.m')
+
+%% NextState Function
+% This function updates the robot configuration using first-order Euler
+% integration and wheel odometry.
+
+type('NextState.m')
+
+%% Full Program / Wrapper Script
+% This script combines the trajectory generator, controller, and state
+% update functions to simulate the complete pick-and-place task.
+
+type('best_main.m')
+##### SOURCE END #####
+--></body></html>
